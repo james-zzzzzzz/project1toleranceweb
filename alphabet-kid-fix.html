@@ -203,7 +203,7 @@
                 <div class="animal-word" id="animalWord">Alligator</div>
                 <div class="cn-name" id="cnName">鳄鱼</div>
             </div>
-            <div class="tip">点击字母发音｜点击单词看动物</div>
+            <div class="tip">点击字母发音｜点击单词看动物并朗读单词</div>
         </div>
     </div>
     <button class="btn-next" id="nextBtn">随机换字母</button>
@@ -297,13 +297,14 @@
             cnName.textContent = item.cn;
         }
 
-        // 打开emoji弹窗
+        // 打开emoji弹窗 + 朗读单词发音
         function showAnimalCard() {
             const item = letterData[currentIndex];
             modalLetter.textContent = item.letter;
             modalWord.textContent = `${item.word} ${item.cn}`;
             animalEmoji.textContent = item.emoji;
             animalModal.classList.add('show');
+            playAudio(item.word); // 点击单词框时朗读单词
         }
 
         function closeAnimalCard() {
@@ -320,9 +321,9 @@
             }, 350);
         });
 
-        // 点击单词弹出emoji弹窗（不自动发音）
+        // 点击单词框：弹出emoji弹窗 + 朗读单词
         wordBox.addEventListener('click', showAnimalCard);
-        // 点击emoji重读单词发音
+        // 点击弹窗里的 emoji：重读单词发音
         animalEmoji.addEventListener('click', () => {
             const item = letterData[currentIndex];
             playAudio(item.word);
