@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>国标公差查询 GB/T1800.1-2020</title>
+<style>
+*{
+  box-sizing:border-box;
+  font-family:"Microsoft Yahei",Consolas,monospace;
+  margin:0;
+  padding:0;
+}
+body{
+  padding:18px;
+  background:#f0f4f8;
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.top-bar{
+  background:#ffffff;
+  padding:12px 18px;
+  border-radius:12px;
+  box-shadow:0 2px 8px rgba(0,0,0,.08);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+}
+.top-title{
+  font-size:20px;
+  font-weight:bold;
+  color:#2c3e50;
+}
+.main-container{
+  display:flex;
+  gap:18px;
+  flex:1;
+  min-height:0;
+}
+.left-panel{
+  width:360px;
+  background:#ffffff;
+  padding:18px;
+  border-radius:12px;
+  box-shadow:0 2px 10px rgba(0,0,0,.08);
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+.form-item{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+label{
+  font-weight:bold;
+  color:#2c3e50;
+  font-size:14px;
+}
+select,input[type="number"]{
+  width:100%;
+  padding:9px 10px;
+  border:1px solid #cbd5e1;
+  border-radius:6px;
+  font-size:15px;
+  background:#fff;
+}
+.input-row{
+  display:flex;
+  gap:10px;
+}
+.input-row .form-item{
+  flex:1;
+}
+.symbol-display{
+  font-size:52px;
+  text-align:center;
+  padding:14px;
+  background:#f8fafc;
+  border-radius:8px;
+  color:#2980b9;
+  font-weight:bold;
+}
+.result-card{
+  background:linear-gradient(135deg,#2980b9,#1c6aa6);
+  color:#fff;
+  padding:20px;
+  border-radius:12px;
+  text-align:center;
+  box-shadow:0 4px 12px rgba(41,128,185,.25);
+}
+.result-card .main-value{
+  font-size:30px;
+  font-weight:bold;
+  margin:10px 0;
+}
+.result-card .sub-value{
+  font-size:16px;
+  opacity:.9;
+}
+.canvas-wrap{
+  flex:1;
+  background:#ffffff;
+  border-radius:12px;
+  box-shadow:0 2px 10px rgba(0,0,0,.08);
+  padding:18px;
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+}
+#toleranceCanvas{
+  width:100%;
+  flex:1;
+  border:1px dashed #e2e8f0;
+  border-radius:8px;
+  background:#fafafa;
+}
+.tip{
+  font-size:12px;
+  color:#64748b;
+  line-height:1.5;
+  margin-top:auto;
+}
+@media (max-width:900px){
+  .main-container{
+    flex-direction:column;
+  }
+  .left-panel{
+    width:100%;
+    max-height:420px;
+  }
+}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <div class="top-title">国标公差查询工具 GB/T1800.1-2020</div>
+</div>
+<div class="main-container">
+  <div class="left-panel">
+    <div class="form-item">
+      <label>公差大类</label>
+      <select id="mainTypeSelect">
+        <option value="IT">标准尺寸IT公差 GB/T1800.1-2020</option>
+      </select>
+    </div>
+    <div class="input-row">
+      <div class="form-item">
+        <label>输入主尺寸 d/L (mm)</label>
+        <input type="number" id="userSizeInput" placeholder="例如 600" min="0" step="0.1" value="600"/>
+      </div>
+      <div class="form-item">
+        <label>尺寸区间</label>
+        <select id="sizeSelect"></select>
+      </div>
+    </div>
+    <div class="form-item">
+      <label>公差等级</label>
+      <select id="gradeSelect"></select>
+    </div>
+    <div class="symbol-display" id="geoSymbol">IT</div>
+    <div class="result-card">
+      <div id="resultTitle">公差查询结果</div>
+      <div class="main-value" id="mainValue">— μm</div>
+      <div class="sub-value" id="subValue">= — mm</div>
+    </div>
+    <div class="tip">
+      ✅ >500后 IT01/IT0 无数据显示--，IT1及以下正常显示<br>
+      ✅ 验证：>500~630 IT1=9μm IT11=440μm；IT0/IT01=--
+    </div>
+  </div>
+  <div class="canvas-wrap">
+    <canvas id="toleranceCanvas"></canvas>
+  </div>
+</div>
+<script>
+// ========== GB/T1800.1-2020 IT公差数据表 索引对应 ==========
+// 索引：0:—~3,1:>3~6,2:>6~10,3:>10~18,4:>18~30,5:>30~50,6:>50~80,7:>80~120,
+// 8:>120~180,9:>180~250,10:>250~315,11:>315~400,12:>400~500,13:>500~630,14:>630~800,
+// 15:>800~1000,16:>1000~1250,17:>1250~1600,18:>1600~2000,19:>2000~2500,20:>2500~3150
+const sizeLabelsIT = [
+  "—~3", ">3~6", ">6~10", ">10~18", ">18~30", ">30~50", ">50~80", ">80~120",
+  ">120~180", ">180~250", ">250~315", ">315~400", ">400~500", ">500~630",
+  ">630~800", ">800~1000", ">1000~1250", ">1250~1600", ">1600~2000", ">2000~2500",
+  ">2500~3150"
+];
+const IT_data = {
+  "IT01": [0.3,0.4,0.4,0.5,0.6,0.6,0.8,1,1.2,2,2.5,3,4,null,null,null,null,null,null,null,null,null],
+  "IT0":  [0.5,0.6,0.6,0.8,1,1,1.2,1.5,2,3,4,5,6,null,null,null,null,null,null,null,null,null],
+  "IT1":  [0.8,1,1,1.2,1.5,1.5,2,2.5,3.5,4.5,6,7,8,9,10,11,13,15,18,22,26],
+  "IT2":  [1.2,1.5,1.5,2,2.5,2.5,3,4,5,7,8,9,10,11,13,15,18,21,25,30,36],
+  "IT3":  [2,2.5,2.5,3,4,4,5,6,8,9,11,13,15,16,18,21,24,29,35,41,49],
+  "IT4":  [3,4,4,5,6,7,8,10,12,14,16,18,20,22,25,28,33,39,46,55,66],
+  "IT5":  [4,5,6,8,9,11,13,15,18,20,23,25,27,32,36,40,47,55,65,78,92],
+  "IT6":  [6,8,9,11,13,16,19,22,25,29,32,36,40,44,50,56,66,78,92,110,132],
+  "IT7":  [10,12,15,18,21,25,30,35,40,46,52,57,63,70,80,90,105,125,150,175,210],
+  "IT8":  [14,18,22,27,33,39,46,54,63,72,81,89,97,110,125,140,165,195,230,280,330],
+  "IT9":  [25,30,36,43,52,62,74,87,100,115,130,140,155,175,200,230,260,310,370,440,520],
+  "IT10": [40,48,58,70,84,100,120,140,160,185,210,230,250,280,320,360,420,500,600,700,840],
+  "IT11": [60,75,90,110,130,160,190,220,250,290,320,360,400,440,500,560,660,780,920,1100,1350],
+  "IT12": [100,120,150,180,210,250,300,350,400,460,520,570,630,700,800,900,1050,1250,1500,1800,2100],
+  "IT13": [140,180,220,270,330,390,460,540,630,720,810,890,970,1100,1250,1400,1650,1950,2300,2700,3300],
+  "IT14": [250,300,360,430,520,620,740,870,1000,1150,1300,1400,1550,1750,2000,2300,2700,3200,3900,4600,5500],
+  "IT15": [400,480,580,700,840,1000,1200,1400,1600,1850,2100,2300,2500,2800,3200,3600,4200,5000,6000,7200,8700],
+  "IT16": [600,750,900,1100,1300,1600,1900,2200,2500,2900,3200,3600,4000,4400,5000,5600,6600,7800,9200,11000,13500],
+  "IT17": [1000,1200,1500,1800,2100,2500,3000,3500,4000,4600,5200,5700,6300,7000,8000,9000,10500,12500,15000,18000,21000],
+  "IT18": [1400,1800,2200,2700,3300,3900,4600,5400,6300,7200,8100,8900,9700,11000,12500,14000,16500,19500,23000,28000,33000]
+};
+const itGrades = ["IT01","IT0","IT1","IT2","IT3","IT4","IT5","IT6","IT7","IT8","IT9","IT10","IT11","IT12","IT13","IT14","IT15","IT16","IT17","IT18"];
+
+// ========== DOM元素 ==========
+const canvas = document.getElementById("toleranceCanvas");
+const ctx = canvas.getContext("2d");
+const mainTypeSelect = document.getElementById("mainTypeSelect");
+const userSizeInput = document.getElementById("userSizeInput");
+const sizeSelect = document.getElementById("sizeSelect");
+const gradeSelect = document.getElementById("gradeSelect");
+const geoSymbol = document.getElementById("geoSymbol");
+const resultTitle = document.getElementById("resultTitle");
+const mainValue = document.getElementById("mainValue");
+const subValue = document.getElementById("subValue");
+
+let currentMode = "IT";
+let currentTol = 10;
+let frame = 0;
+
+// ========== 画布自适应 ==========
+function resizeCanvas(){
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * window.devicePixelRatio;
+  canvas.height = rect.height * window.devicePixelRatio;
+  ctx.setTransform(window.devicePixelRatio,0,0,window.devicePixelRatio,0,0);
+}
+window.addEventListener("resize", resizeCanvas);
+
+// ========== 区间匹配函数 ==========
+function matchSizeInterval(val, intervalList) {
+  if (isNaN(val) || val <= 0) return intervalList[0];
+  for (let i = 0; i < intervalList.length; i++) {
+    const s = intervalList[i];
+    if(s === "—~3"){
+      if(val <= 3) return s;
+    }else if(s.startsWith(">")){
+      const parts = s.replace(">", "").split("~");
+      const min = parseFloat(parts[0]);
+      const max = parseFloat(parts[1]);
+      if (val > min && val <= max) return s;
+    }
+  }
+  return intervalList[intervalList.length - 1];
+}
+
+function autoMatchSizeInterval(){
+  const val = parseFloat(userSizeInput.value);
+  if(isNaN(val) || val <= 0) return;
+  const correctInterval = matchSizeInterval(val, sizeLabelsIT);
+  sizeSelect.value = correctInterval;
+  updateResult();
+}
+
+// ========== 初始化下拉选项 ==========
+function updateSelectOptions(){
+  geoSymbol.innerText = "IT";
+  sizeSelect.innerHTML = "";
+  gradeSelect.innerHTML = "";
+  sizeLabelsIT.forEach(s=>{
+    const opt = document.createElement("option");
+    opt.textContent = s;
+    sizeSelect.appendChild(opt);
+  });
+  itGrades.forEach(g=>{
+    const opt = document.createElement("option");
+    opt.textContent = g;
+    gradeSelect.appendChild(opt);
+  });
+  gradeSelect.value = "IT11";
+  autoMatchSizeInterval();
+  updateResult();
+}
+
+// ========== 更新结果显示（处理null值显示--） ==========
+function updateResult(){
+  const selectedSize = sizeSelect.value;
+  const gradeText = gradeSelect.value;
+  const sIdx = sizeLabelsIT.indexOf(selectedSize);
+  const val = IT_data[gradeText][sIdx];
+  resultTitle.innerText = "标准IT公差";
+  if(val === null){
+    mainValue.innerText = `--`;
+    subValue.innerText = `无此等级数值｜区间：${selectedSize}`;
+    currentTol = 0;
+  }else{
+    currentTol = val;
+    mainValue.innerText = `${currentTol} μm`;
+    subValue.innerText = `= ${(currentTol/1000).toFixed(3)} mm｜区间：${selectedSize}`;
+  }
+}
+
+// ========== 绘图辅助函数 ==========
+function drawITLegend(w,h,t,wave){
+  const cx = w/2, cy = h/2;
+  const barHeight = Math.min(h * 0.35, 80);
+  const halfTol = Math.min(barHeight * 0.45, 35);
+  ctx.strokeStyle = "#2c3e50";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(cx - 120, cy - barHeight/2, 240, barHeight);
+  ctx.fillStyle = "rgba(41,128,185,0.18)";
+  ctx.fillRect(cx - 120, cy - halfTol, 240, halfTol * 2);
+  ctx.strokeStyle = "#e74c3c";
+  ctx.setLineDash([4,4]);
+  ctx.strokeRect(cx - 130, cy - halfTol - 8, 260, halfTol * 2 + 16);
+  ctx.setLineDash([]);
+  ctx.fillStyle = "#2980b9";
+  ctx.font = "14px Microsoft Yahei";
+  ctx.textAlign = "center";
+  ctx.fillText("被测尺寸", cx, cy - barHeight/2 - 10);
+  if(t > 0){
+    ctx.fillText(`公差带 ±${(t/2).toFixed(1)} μm`, cx, cy + barHeight/2 + 20);
+  }else{
+    ctx.fillText(`无对应公差值`, cx, cy + barHeight/2 + 20);
+  }
+}
+
+// ========== 主绘图循环 ==========
+function draw(){
+  frame++;
+  const w = canvas.width / window.devicePixelRatio;
+  const h = canvas.height / window.devicePixelRatio;
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle = "#fafafa";
+  ctx.fillRect(0,0,w,h);
+  const t = currentTol;
+  const wave = Math.sin(frame * 0.04);
+  ctx.fillStyle = "#2c3e50";
+  ctx.font = "bold 18px Microsoft Yahei";
+  ctx.textAlign = "center";
+  ctx.fillText("标准IT公差带示意图", w/2, 26);
+  drawITLegend(w,h,t,wave);
+  requestAnimationFrame(draw);
+}
+
+// ========== 初始化 & 绑定事件 ==========
+document.addEventListener("DOMContentLoaded", function(){
+  resizeCanvas();
+  updateSelectOptions();
+  userSizeInput.addEventListener("input", autoMatchSizeInterval);
+  sizeSelect.addEventListener("change", updateResult);
+  gradeSelect.addEventListener("change", updateResult);
+  draw();
+});
+</script>
+</body>
+</html>
