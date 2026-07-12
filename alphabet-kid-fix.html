@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>幼儿26字母英语启蒙｜真实录音版</title>
+<title>幼儿26字母英语启蒙｜在线真实录音版</title>
 <style>
     * {
         margin: 0;
@@ -130,7 +130,6 @@
     .tip {
         font-size: 13px;
         color: #bbb;
-        text-align: center;
         margin-top: 18px;
         line-height: 1.6;
     }
@@ -149,13 +148,11 @@
 </head>
 <body>
 
-<h1>📖 字母动物启蒙英语｜真实录音版</h1>
+<h1>📖 字母动物启蒙英语｜在线真实录音版</h1>
 
 <div class="control-buttons">
     <button class="ctrl-btn" id="btnUK">英式发音</button>
     <button class="ctrl-btn" id="btnUS">美式发音</button>
-    <button class="ctrl-btn" id="btnFemale">女声</button>
-    <button class="ctrl-btn" id="btnMale">男声</button>
 </div>
 
 <div class="card-container">
@@ -207,9 +204,7 @@
     ];
 
     let isUK = true;
-    let isMale = false;
     let currentIndex = 0;
-    const basePath = "./audio/";
 
     const card = document.getElementById('card');
     const letterDisplay = document.getElementById('letterDisplay');
@@ -219,30 +214,19 @@
     const nextBtn = document.getElementById('nextBtn');
     const btnUK = document.getElementById('btnUK');
     const btnUS = document.getElementById('btnUS');
-    const btnFemale = document.getElementById('btnFemale');
-    const btnMale = document.getElementById('btnMale');
 
     function updateBtnStyle() {
         btnUK.classList.toggle('active', isUK);
         btnUS.classList.toggle('active', !isUK);
-        btnFemale.classList.toggle('active', !isMale);
-        btnMale.classList.toggle('active', isMale);
     }
     updateBtnStyle();
 
     btnUK.onclick = () => { isUK = true; updateBtnStyle(); };
     btnUS.onclick = () => { isUK = false; updateBtnStyle(); };
-    btnFemale.onclick = () => { isMale = false; updateBtnStyle(); };
-    btnMale.onclick = () => { isMale = true; updateBtnStyle(); };
 
-    function getFolder() {
-        const acc = isUK ? 'uk' : 'us';
-        const gender = isMale ? 'male' : 'female';
-        return `${acc}_${gender}/`;
-    }
-
-    function playAudio(filename) {
-        const audio = new Audio(basePath + getFolder() + filename + ".mp3");
+    function playRealAudio(text) {
+        const type = isUK ? 1 : 2;
+        const audio = new Audio(`https://dict.youdao.com/dictvoice?audio=${encodeURIComponent(text)}&type=${type}`);
         audio.play();
     }
 
@@ -263,7 +247,7 @@
     letterDisplay.addEventListener('click', () => {
         const item = letterData[currentIndex];
         card.classList.add('animate');
-        playAudio(item.letter);
+        playRealAudio(item.letter);
         setTimeout(() => {
             card.classList.remove('animate');
         }, 350);
@@ -272,7 +256,7 @@
     // 点击单词发音
     wordBox.addEventListener('click', () => {
         const item = letterData[currentIndex];
-        playAudio(item.word);
+        playRealAudio(item.word);
     });
 
     nextBtn.addEventListener('click', randomLetter);
