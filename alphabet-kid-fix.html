@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>幼儿26字母英语启蒙</title>
     <style>
         * {
@@ -11,17 +13,21 @@
             box-sizing: border-box;
             font-family: "Microsoft YaHei", sans-serif;
             touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
         }
         html, body {
             background: #fff7e6;
+            width: 100%;
+            height: 100dvh;
+            overflow: hidden;
+            position: fixed;
+            top: 0;
+            left: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            position: fixed;
+            overscroll-behavior: none;
         }
         h1 {
             color: #ff7096;
@@ -29,21 +35,21 @@
             font-size: 24px;
             text-align: center;
         }
-        .voice-buttons{
+        .control-buttons{
             display:flex;
             gap:10px;
             margin-bottom:20px;
         }
-        .voice-btn{
-            padding:8px 16px;
+        .ctrl-btn{
+            padding:8px 12px;
             border-radius:20px;
             border:none;
             background:#70bfff;
             color:white;
-            font-size:16px;
+            font-size:15px;
             cursor:pointer;
         }
-        .voice-btn.active{
+        .ctrl-btn.active{
             background:#2980b9;
         }
         .card-container {
@@ -121,7 +127,7 @@
             top: 0;
             left: 0;
             width: 100%;
-            height: 100%;
+            height: 100dvh;
             background: rgba(0,0,0,0.5);
             display: flex;
             align-items: center;
@@ -183,9 +189,11 @@
 </head>
 <body>
     <h1>📖 字母动物启蒙英语</h1>
-    <div class="voice-buttons">
-        <button class="voice-btn" id="femaleBtn">女声</button>
-        <button class="voice-btn" id="maleBtn">男声</button>
+    <div class="control-buttons">
+        <button class="ctrl-btn" id="btnUK">英式发音</button>
+        <button class="ctrl-btn" id="btnUS">美式发音</button>
+        <button class="ctrl-btn" id="btnFemale">女声</button>
+        <button class="ctrl-btn" id="btnMale">男声</button>
     </div>
 
     <div class="card-container">
@@ -212,6 +220,7 @@
     </div>
 
     <script>
+        // 字母基础数据
         const letterData = [
             { letter: "A", word: "Alligator", cn: "鳄鱼", emoji: "🐊" },
             { letter: "B", word: "Bee", cn: "蜜蜂", emoji: "🐝" },
@@ -241,10 +250,18 @@
             { letter: "Z", word: "Zebra", cn: "斑马", emoji: "🦓" }
         ];
 
+        // 发音配置（可替换为本地mp3路径）
+        let isUK = true;    // 默认英式发音
+        let isMale = false; // 默认女声
         let currentIndex = 0;
-        let voices = [];
-        let selectedVoice = null;
-        let isMale = false;
+
+        // 音频映射模板，后续可替换真实mp3
+        function getAudioUrl(letter) {
+            const type = isUK ? 'uk' : 'us';
+            const gender = isMale ? 'male' : 'female';
+            // 此处为示例模板，如需离线可下载26字母发音mp3并修改路径，如 `audio/${type}/${gender}/${letter}.mp3`
+            return `https://dict.youdao.com/dictvoice?audio=${letter}&type=${isUK?1:2}`;
+        }
 
         const card = document.getElementById('card');
         const letterDisplay = document.getElementById('letterDisplay');
@@ -252,32 +269,29 @@
         const cnName = document.getElementById('cnName');
         const wordBox = document.getElementById('wordBox');
         const nextBtn = document.getElementById('nextBtn');
-        const femaleBtn = document.getElementById('femaleBtn');
-        const maleBtn = document.getElementById('maleBtn');
+        const btnUK = document.getElementById('btnUK');
+        const btnUS = document.getElementById('btnUS');
+        const btnFemale = document.getElementById('btnFemale');
+        const btnMale = document.getElementById('btnMale');
         const animalModal = document.getElementById('animalModal');
         const animalImage = document.getElementById('animalImage');
         const modalLetter = document.getElementById('modalLetter');
         const modalWord = document.getElementById('modalWord');
         const closeBtn = document.getElementById('closeBtn');
 
-        // 加载语音库，过滤掉 kapetou 异常语音
-        function loadVoices() {
-            voices = window.speechSynthesis.getVoices().filter(v => !v.name.toLowerCase().includes('kapetou'));
+        // 切换发音模式按钮样式
+        function updateBtnStyle() {
+            btnUK.classList.toggle('active', isUK);
+            btnUS.classList.toggle('active', !isUK);
+            btnFemale.classList.toggle('active', !isMale);
+            btnMale.classList.toggle('active', isMale);
         }
-        window.speechSynthesis.onvoiceschanged = loadVoices;
-        loadVoices();
+        updateBtnStyle();
 
-        // 音色切换
-        femaleBtn.addEventListener('click', ()=>{
-            isMale = false;
-            femaleBtn.classList.add('active');
-            maleBtn.classList.remove('active');
-        });
-        maleBtn.addEventListener('click', ()=>{
-            isMale = true;
-            maleBtn.classList.add('active');
-            femaleBtn.classList.remove('active');
-        });
+        btnUK.onclick = () => { isUK = true; updateBtnStyle(); };
+        btnUS.onclick = () => { isUK = false; updateBtnStyle(); };
+        btnFemale.onclick = () => { isMale = false; updateBtnStyle(); };
+        btnMale.onclick = () => { isMale = true; updateBtnStyle(); };
 
         function randomLetter() {
             const newIndex = Math.floor(Math.random() * letterData.length);
@@ -292,26 +306,10 @@
             cnName.textContent = item.cn;
         }
 
-        // 纯朗读函数，只朗读传入文本，过滤异常语音
-        function speak(text) {
-            window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'en-GB';
-            utterance.rate = 0.7;
-            utterance.pitch = isMale ? 0.9 : 1;
-
-            // 优先英式干净语音，区分男女声
-            const ukVoices = voices.filter(v => v.lang === 'en-GB');
-            if(ukVoices.length > 0){
-                if(isMale){
-                    const maleUkVoice = ukVoices.find(v => v.gender === 'male' || v.name.toLowerCase().includes('male')) || ukVoices[0];
-                    utterance.voice = maleUkVoice;
-                }else{
-                    const femaleUkVoice = ukVoices.find(v => v.gender === 'female' || v.name.toLowerCase().includes('female')) || ukVoices[0];
-                    utterance.voice = femaleUkVoice;
-                }
-            }
-            window.speechSynthesis.speak(utterance);
+        // 纯字母音频播放函数
+        function playLetterSound(letter) {
+            const audio = new Audio(getAudioUrl(letter));
+            audio.play();
         }
 
         function showAnimalCard() {
@@ -320,29 +318,23 @@
             modalWord.textContent = `${item.word} ${item.cn}`;
             animalImage.textContent = item.emoji;
             animalModal.classList.add('show');
-            speak(item.word);
         }
 
         function closeAnimalCard() {
             animalModal.classList.remove('show');
         }
 
-        // 点击字母：仅朗读单个纯字母
+        // 点击字母播放纯字母音频 + 动画
         letterDisplay.addEventListener('click', () => {
             const item = letterData[currentIndex];
             card.classList.add('animate');
-            speak(item.letter);
+            playLetterSound(item.letter);
             setTimeout(() => {
                 card.classList.remove('animate');
             }, 350);
         });
 
         wordBox.addEventListener('click', showAnimalCard);
-        animalImage.addEventListener('click', () => {
-            const item = letterData[currentIndex];
-            speak(item.word);
-        });
-
         closeBtn.addEventListener('click', closeAnimalCard);
         animalModal.addEventListener('click', (e) => {
             if (e.target === animalModal) closeAnimalCard();
