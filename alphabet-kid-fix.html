@@ -2,8 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <!-- 固定视口，禁止全局缩放 -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>幼儿26字母英语启蒙</title>
     <style>
         * {
@@ -11,33 +10,31 @@
             padding: 0;
             box-sizing: border-box;
             font-family: "Microsoft YaHei", sans-serif;
-            touch-action: manipulation; /* 禁用浏览器双击缩放 */
         }
-        html, body {
+
+        body {
             background: #fff7e6;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
             padding: 20px;
-            /* 锁定整体布局，禁止全局变形 */
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
         }
+
         h1 {
             color: #ff7096;
             margin-bottom: 30px;
             font-size: 28px;
             text-align: center;
         }
+
         .card-container {
             width: 320px;
             height: 420px;
             position: relative;
             perspective: 1000px;
         }
+
         .letter-card {
             width: 100%;
             height: 100%;
@@ -52,12 +49,14 @@
             position: absolute;
             top: 0;
             left: 0;
-            transition: transform 0.4s ease;
+            transition: transform 0.4s ease, opacity 0.4s ease;
             z-index: 2;
         }
+
         .letter-card.animate {
             transform: scale(1.1) rotate(3deg);
         }
+
         .big-letter {
             font-size: 110px;
             font-weight: bold;
@@ -66,12 +65,15 @@
             user-select: none;
             transition: transform 0.2s ease;
         }
+
         .big-letter:hover {
             transform: scale(1.08);
         }
+
         .big-letter:active {
             transform: scale(0.95);
         }
+
         .word-box {
             margin-top: 20px;
             padding: 12px 24px;
@@ -80,23 +82,28 @@
             cursor: pointer;
             transition: all 0.3s ease;
         }
+
         .word-box:hover {
             background: #ffdf99;
             transform: scale(1.05);
         }
+
         .word-box:active {
             transform: scale(0.95);
         }
+
         .animal-word {
             font-size: 24px;
             color: #666;
             font-weight: bold;
         }
+
         .cn-name {
             font-size: 16px;
             color: #999;
             margin-top: 4px;
         }
+
         .tip {
             font-size: 14px;
             color: #bbb;
@@ -104,6 +111,7 @@
             margin-top: 18px;
             line-height: 1.6;
         }
+
         .btn-next {
             margin-top: 30px;
             padding: 12px 30px;
@@ -115,12 +123,15 @@
             cursor: pointer;
             transition: background 0.3s ease;
         }
+
         .btn-next:hover {
             background: #38a3a5;
         }
+
         .btn-next:active {
             background: #2d7a7c;
         }
+
         /* 动物图片卡片 */
         .animal-modal {
             position: fixed;
@@ -137,10 +148,12 @@
             pointer-events: none;
             transition: opacity 0.3s ease;
         }
+
         .animal-modal.show {
             opacity: 1;
             pointer-events: auto;
         }
+
         .animal-modal-card {
             background: white;
             width: 300px;
@@ -149,9 +162,11 @@
             transform: translateY(50px);
             transition: transform 0.4s ease;
         }
+
         .animal-modal.show .animal-modal-card {
             transform: translateY(0);
         }
+
         .animal-image {
             width: 100%;
             height: 220px;
@@ -163,22 +178,28 @@
             cursor: pointer;
             transition: transform 0.2s ease;
         }
+
         .animal-image:hover {
             transform: scale(1.02);
         }
+
         .animal-info {
             padding: 16px;
             text-align: center;
+            text-align: center;
         }
+
         .animal-info h2 {
             font-size: 28px;
             color: #42b983;
             margin-bottom: 8px;
         }
+
         .animal-info p {
             color: #666;
             font-size: 16px;
         }
+
         .close-btn {
             margin-top: 12px;
             padding: 8px 24px;
@@ -189,6 +210,7 @@
             cursor: pointer;
             font-size: 16px;
         }
+
         .close-btn:hover {
             background: #ff4d6d;
         }
@@ -259,7 +281,6 @@
 
         let currentIndex = 0;
         let voices = [];
-        let lastTouchEnd = 0;
 
         const card = document.getElementById('card');
         const letterDisplay = document.getElementById('letterDisplay');
@@ -273,21 +294,6 @@
         const modalLetter = document.getElementById('modalLetter');
         const modalWord = document.getElementById('modalWord');
         const closeBtn = document.getElementById('closeBtn');
-
-        // 防双击全局缩放
-        document.documentElement.addEventListener('touchend', function (event) {
-            const now = Date.now();
-            if (now - lastTouchEnd <= 300) {
-                event.preventDefault();
-            }
-            lastTouchEnd = now;
-        }, { passive: false });
-        // 禁用双指缩放
-        document.documentElement.addEventListener('touchstart', function (event) {
-            if (event.touches.length > 1) {
-                event.preventDefault();
-            }
-        }, { passive: false });
 
         // 加载语音列表
         function loadVoices() {
@@ -311,11 +317,13 @@
 
         // 纯朗读函数：只朗读传入文本，优先干净 en-GB 英式语音
         function speak(text) {
-            window.speechSynthesis.cancel();
+            window.speechSynthesis.cancel(); // 立刻停止所有正在朗读语音，杜绝残留/前缀语音
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'en-GB';
             utterance.rate = 0.7;
             utterance.pitch = 1;
+
+            // 筛选干净的英式语音，排除异常第三方语音
             const cleanUkVoice = voices.find(v => v.lang === 'en-GB' && !v.name.toLowerCase().includes('kapetou'));
             if (cleanUkVoice) {
                 utterance.voice = cleanUkVoice;
