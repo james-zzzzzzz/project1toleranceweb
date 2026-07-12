@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>形位公差查询 GB/T1184</title>
+<style>
+*{
+  box-sizing:border-box;
+  font-family:"Microsoft Yahei",Consolas,monospace;
+  margin:0;
+  padding:0;
+}
+body{
+  padding:18px;
+  background:#f0f4f8;
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.top-bar{
+  background:#ffffff;
+  padding:12px 18px;
+  border-radius:12px;
+  box-shadow:0 2px 8px rgba(0,0,0,.08);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+}
+.top-title{
+  font-size:20px;
+  font-weight:bold;
+  color:#2c3e50;
+}
+.main-container{
+  display:flex;
+  gap:18px;
+  flex:1;
+  min-height:0;
+}
+.left-panel{
+  width:360px;
+  background:#ffffff;
+  padding:18px;
+  border-radius:12px;
+  box-shadow:0 2px 10px rgba(0,0,0,.08);
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+.form-item{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+label{
+  font-weight:bold;
+  color:#2c3e50;
+  font-size:14px;
+}
+select,input[type="number"]{
+  width:100%;
+  padding:9px 10px;
+  border:1px solid #cbd5e1;
+  border-radius:6px;
+  font-size:15px;
+  background:#fff;
+}
+.input-row{
+  display:flex;
+  gap:10px;
+}
+.input-row .form-item{
+  flex:1;
+}
+.symbol-display{
+  font-size:52px;
+  text-align:center;
+  padding:14px;
+  background:#f8fafc;
+  border-radius:8px;
+  color:#2980b9;
+  font-weight:bold;
+}
+.result-card{
+  background:linear-gradient(135deg,#2980b9,#1c6aa6);
+  color:#fff;
+  padding:20px;
+  border-radius:12px;
+  text-align:center;
+  box-shadow:0 4px 12px rgba(41,128,185,.25);
+}
+.result-card .main-value{
+  font-size:30px;
+  font-weight:bold;
+  margin:10px 0;
+}
+.result-card .sub-value{
+  font-size:16px;
+  opacity:.9;
+}
+.canvas-wrap{
+  flex:1;
+  background:#ffffff;
+  border-radius:12px;
+  box-shadow:0 2px 10px rgba(0,0,0,.08);
+  padding:18px;
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+}
+#toleranceCanvas{
+  width:100%;
+  flex:1;
+  border:1px dashed #e2e8f0;
+  border-radius:8px;
+  background:#fafafa;
+}
+.tip{
+  font-size:12px;
+  color:#64748b;
+  line-height:1.5;
+  margin-top:auto;
+}
+@media (max-width:900px){
+  .main-container{
+    flex-direction:column;
+  }
+  .left-panel{
+    width:100%;
+    max-height:420px;
+  }
+}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <div class="top-title">形位公差查询工具 GB/T1184</div>
+</div>
+<div class="main-container">
+  <div class="left-panel">
+    <div class="form-item">
+      <label>公差大类</label>
+      <select id="mainTypeSelect">
+        <option value="straight">形状公差 - 直线度</option>
+        <option value="flat">形状公差 - 平面度</option>
+        <option value="round">形状公差 - 圆度</option>
+        <option value="cylinder">形状公差 - 圆柱度</option>
+        <option value="parallel">方向公差 - 平行度</option>
+        <option value="perpendicular">方向公差 - 垂直度</option>
+        <option value="angular">方向公差 - 倾斜度</option>
+        <option value="concentric">位置公差 - 同轴度</option>
+        <option value="symmetric">位置公差 - 对称度</option>
+        <option value="circleRunout">跳动公差 - 圆跳动</option>
+        <option value="fullRunout">跳动公差 - 全跳动</option>
+      </select>
+    </div>
+    <div class="input-row">
+      <div class="form-item">
+        <label>输入主尺寸 d/L (mm)</label>
+        <input type="number" id="userSizeInput" placeholder="例如 400" min="0" step="0.1" value="400"/>
+      </div>
+      <div class="form-item">
+        <label>尺寸区间</label>
+        <select id="sizeSelect"></select>
+      </div>
+    </div>
+    <div class="form-item">
+      <label>公差等级</label>
+      <select id="gradeSelect"></select>
+    </div>
+    <div class="symbol-display" id="geoSymbol">—</div>
+    <div class="result-card">
+      <div id="resultTitle">形位公差查询结果</div>
+      <div class="main-value" id="mainValue">— μm</div>
+      <div class="sub-value" id="subValue">= — mm</div>
+    </div>
+    <div class="tip">
+      ✅ GB/T1184 形位公差数值<br>
+      ✅ 验证：>400~630 倾斜度11级 = 600μm
+    </div>
+  </div>
+  <div class="canvas-wrap">
+    <canvas id="toleranceCanvas"></canvas>
+  </div>
+</div>
+<script>
+// 直线度、平面度
+const straightFlatSize = [
+  "≤10",">10~16",">16~25",">25~40",">40~63",">63~100",">100~160",">160~250",
+  ">250~400",">400~630",">630~1000",">1000~1600",">1600~2500",">2500~4000",
+  ">4000~6300",">6300~10000"
+];
+const straightFlatData = [
+  [0.2,0.4,0.8,1.2,2,3,5,8,12,20,30,60],
+  [0.25,0.5,1,1.5,2.5,4,6,10,15,25,40,80],
+  [0.3,0.6,1.2,2,3,5,8,12,20,30,50,100],
+  [0.4,0.8,1.5,2.5,4,6,10,15,25,40,60,120],
+  [0.5,1,2,3,5,8,12,20,30,50,80,150],
+  [0.6,1.2,2.5,4,6,10,15,25,40,60,100,200],
+  [0.8,1.5,3,5,8,12,20,30,50,80,120,250],
+  [1,2,4,6,10,15,25,40,60,100,150,300],
+  [1.2,2.5,5,8,12,20,30,50,80,120,200,400],
+  [1.5,3,6,10,15,25,40,60,100,150,250,500],
+  [2,4,8,12,20,30,50,80,120,200,300,600],
+  [2.5,5,10,15,25,40,60,100,150,250,400,800],
+  [3,6,12,20,30,50,80,120,200,300,500,1000],
+  [4,8,15,25,40,60,100,150,250,400,600,1200],
+  [5,10,20,30,50,80,120,200,300,500,800,1500],
+  [6,12,25,40,60,100,150,250,400,600,1000,2000]
+];
+
+// 圆度、圆柱度
+const roundCylSize = [
+  "≤3",">3~6",">6~10",">10~18",">18~30",">30~50",">50~80",">80~120",
+  ">120~180",">180~250",">250~315",">315~400",">400~500"
+];
+const roundCylData = [
+  [0.1,0.2,0.3,0.5,0.8,1.2,2,3,4,6,10,14,25],
+  [0.1,0.2,0.4,0.6,1,1.5,2.5,4,5,8,12,18,30],
+  [0.12,0.25,0.4,0.6,1,1.5,2.5,4,6,9,15,22,36],
+  [0.15,0.25,0.5,0.8,1.2,2,3,5,7,11,18,27,43],
+  [0.2,0.3,0.6,1,1.5,2.5,4,6,9,13,21,33,52],
+  [0.25,0.4,0.6,1,1.5,2.5,4,7,11,16,25,39,62],
+  [0.3,0.5,0.8,1.2,2,3,5,8,13,19,30,46,74],
+  [0.4,0.6,1,1.5,2.5,4,6,10,15,22,35,54,87],
+  [0.6,1,1.2,2,3.5,5,7,12,18,25,40,63,100],
+  [0.8,1.2,2,3,4.5,7,8,14,20,29,46,72,115],
+  [1,1.6,2.5,4,6,8,12,16,23,32,52,81,130],
+  [1.2,2,3,5,7,9,13,15,25,36,57,89,140],
+  [1.5,2.5,4,6,8,10,15,20,27,40,63,97,155]
+];
+
+// 平行度/垂直度/倾斜度
+const orientSize = [
+  "≤10",">10~16",">16~25",">25~40",">40~63",">63~100",">100~160",">160~250",
+  ">250~400",">400~630",">630~1000",">1000~1600",">1600~2500",">2500~4000",
+  ">4000~6300",">6300~10000"
+];
+const orientData = [
+  [0.4,0.8,1.5,3,5,8,12,20,30,50,80,120],
+  [0.5,1,2,4,6,10,15,25,40,60,100,150],
+  [0.6,1.2,2.5,5,8,12,20,30,50,80,120,200],
+  [0.8,1.5,3,6,10,15,25,40,60,100,150,250],
+  [1,2,4,8,12,20,30,50,80,120,200,300],
+  [1.2,2.5,5,10,15,25,40,60,100,150,250,400],
+  [1.5,3,6,12,20,30,50,80,120,200,300,500],
+  [2,4,8,15,25,40,60,100,150,250,400,600],
+  [2.5,5,10,20,30,50,80,120,200,300,500,800],
+  [3,6,12,25,40,60,80,120,150,300,600,1200],
+  [4,8,15,30,50,80,120,200,300,500,800,1200],
+  [5,10,20,40,60,100,150,250,400,600,1000,1500],
+  [6,12,25,50,80,120,200,300,500,800,1200,2000],
+  [8,15,30,60,100,150,250,400,600,1000,1500,2500],
+  [10,20,40,80,120,200,300,500,800,1500,1500,3000],
+  [12,25,50,100,150,250,400,600,1000,1500,2500,4000]
+];
+
+// 同轴度/对称度/圆跳动/全跳动
+const posRunSize = [
+  "≤1",">1~3",">3~6",">6~10",">10~18",">18~30",">30~50",">50~120",
+  ">120~250",">250~500",">500~800",">800~1250",">1250~2000",">2000~3150",
+  ">3150~5000",">5000~8000",">8000~10000"
+];
+const posRunData = [
+  [0.4,0.6,1.0,1.5,2.5,4,6,10,15,25,40,60],
+  [0.4,0.6,1.0,1.5,2.5,4,6,10,15,25,40,120],
+  [0.5,0.8,1.2,2,3,5,8,12,25,50,80,150],
+  [0.6,1,1.5,2.5,4,6,10,15,30,60,100,200],
+  [0.8,1.2,2,3,5,8,12,20,40,80,120,250],
+  [1,1.5,2.5,4,6,10,15,25,50,100,150,300],
+  [1.2,2,3,5,8,12,20,30,60,120,180,400],
+  [1.5,2.5,4,6,10,15,25,40,100,150,250,500],
+  [2,3,5,8,12,20,30,50,100,150,250,500],
+  [2.5,4,6,10,15,25,40,60,150,250,400,800],
+  [3,5,8,12,20,30,50,80,250,400,500,1000],
+  [4,6,10,15,25,40,60,100,250,400,600,1200],
+  [5,8,12,20,30,50,80,120,400,600,800,1500],
+  [6,10,15,25,40,60,100,150,400,600,1200,2000],
+  [8,12,20,30,50,80,120,200,600,1000,1500,2500],
+  [10,15,25,40,60,100,150,250,1000,1500,2000,3000],
+  [12,20,30,50,80,120,200,300,1200,2000,3000,4000]
+];
+
+const symbolMap = {
+  straight: "—",
+  flat: "◱",
+  round: "○",
+  cylinder: "◍",
+  parallel: "∥",
+  perpendicular: "⊥",
+  angular: "∠",
+  concentric: "◎",
+  symmetric: "⋞",
+  circleRunout: "↗",
+  fullRunout: "⇗"
+};
+
+const typeNameMap = {
+  straight: "直线度公差",
+  flat: "平面度公差",
+  round: "圆度公差",
+  cylinder: "圆柱度公差",
+  parallel: "平行度公差",
+  perpendicular: "垂直度公差",
+  angular: "倾斜度公差",
+  concentric: "同轴度公差",
+  symmetric: "对称度公差",
+  circleRunout: "圆跳动公差",
+  fullRunout: "全跳动公差"
+};
+
+// DOM元素
+const canvas = document.getElementById("toleranceCanvas");
+const ctx = canvas.getContext("2d");
+const mainTypeSelect = document.getElementById("mainTypeSelect");
+const userSizeInput = document.getElementById("userSizeInput");
+const sizeSelect = document.getElementById("sizeSelect");
+const gradeSelect = document.getElementById("gradeSelect");
+const geoSymbol = document.getElementById("geoSymbol");
+const resultTitle = document.getElementById("resultTitle");
+const mainValue = document.getElementById("mainValue");
+const subValue = document.getElementById("subValue");
+
+let currentMode = "straight";
+let currentTol = 10;
+let frame = 0;
+
+// 画布适配
+function resizeCanvas(){
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * window.devicePixelRatio;
+  canvas.height = rect.height * window.devicePixelRatio;
+  ctx.setTransform(window.devicePixelRatio,0,0,window.devicePixelRatio,0,0);
+}
+window.addEventListener("resize", resizeCanvas);
+
+// 获取当前类型尺寸列表
+function getSizeList(){
+  if(["straight","flat"].includes(currentMode)) return straightFlatSize;
+  else if(["round","cylinder"].includes(currentMode)) return roundCylSize;
+  else if(["parallel","perpendicular","angular"].includes(currentMode)) return orientSize;
+  else return posRunSize;
+}
+
+// 精确匹配区间函数
+function matchSizeInterval(val, intervalList) {
+  if (isNaN(val) || val <= 0) return intervalList[0];
+  for (let i = 0; i < intervalList.length; i++) {
+    const s = intervalList[i];
+    if (s.startsWith("≤")) {
+      const max = parseFloat(s.replace("≤", ""));
+      if (val <= max) return s;
+    } else if (s.startsWith(">")) {
+      const parts = s.replace(">", "").split("~");
+      const min = parseFloat(parts[0]);
+      const max = parseFloat(parts[1]);
+      if (val > min && val <= max) return s;
+    }
+  }
+  return intervalList[intervalList.length - 1];
+}
+
+function autoMatchSizeInterval(){
+  const val = parseFloat(userSizeInput.value);
+  if(isNaN(val) || val <= 0) return;
+  const list = getSizeList();
+  const correctInterval = matchSizeInterval(val, list);
+  sizeSelect.value = correctInterval;
+  updateResult();
+}
+
+// 初始化下拉选项
+function updateSelectOptions(){
+  currentMode = mainTypeSelect.value;
+  geoSymbol.innerText = symbolMap[currentMode];
+  sizeSelect.innerHTML = "";
+  gradeSelect.innerHTML = "";
+  const list = getSizeList();
+  list.forEach(s=>{
+    const opt = document.createElement("option");
+    opt.textContent = s;
+    sizeSelect.appendChild(opt);
+  });
+  if(["round","cylinder"].includes(currentMode)){
+    for(let i=0;i<=12;i++){
+      const opt = document.createElement("option");
+      opt.textContent = i;
+      gradeSelect.appendChild(opt);
+    }
+    gradeSelect.value = 11;
+  }else{
+    for(let i=1;i<=12;i++){
+      const opt = document.createElement("option");
+      opt.textContent = i;
+      gradeSelect.appendChild(opt);
+    }
+    gradeSelect.value = 11;
+  }
+  autoMatchSizeInterval();
+  updateResult();
+}
+
+// 更新结果显示
+function updateResult(){
+  const list = getSizeList();
+  const selectedSize = sizeSelect.value;
+  const gradeText = gradeSelect.value;
+  const sIdx = list.indexOf(selectedSize);
+  let val;
+  if(["straight","flat"].includes(currentMode)){
+    const g = parseInt(gradeText)-1;
+    val = straightFlatData[sIdx][g];
+  }else if(["round","cylinder"].includes(currentMode)){
+    const g = parseInt(gradeText);
+    val = roundCylData[sIdx][g];
+  }else if(["parallel","perpendicular","angular"].includes(currentMode)){
+    const g = parseInt(gradeText)-1;
+    val = orientData[sIdx][g];
+  }else{
+    const g = parseInt(gradeText)-1;
+    val = posRunData[sIdx][g];
+  }
+  currentTol = val;
+  resultTitle.innerText = typeNameMap[currentMode];
+  mainValue.innerText = `${currentTol} μm`;
+  subValue.innerText = `= ${(currentTol/1000).toFixed(3)} mm｜区间：${selectedSize}`;
+}
+
+// 绘图工具函数
+function drawDimensionArrow(ctx, x1, y1, x2, y2, text){
+  ctx.strokeStyle = "#2980b9";
+  ctx.fillStyle = "#2980b9";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
+  const angle = Math.atan2(y2 - y1, x2 - x1);
+  const arrowSize = 5;
+  ctx.beginPath();
+  ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - arrowSize * Math.cos(angle - 0.4), y2 - arrowSize * Math.sin(angle - 0.4));
+  ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - arrowSize * Math.cos(angle + 0.4), y2 - arrowSize * Math.sin(angle + 0.4));
+  ctx.stroke();
+  ctx.font = "12px Microsoft Yahei";
+  ctx.textAlign = "left";
+  ctx.fillText(text, x2 + 8, (y1 + y2) / 2 + 4);
+}
+function drawStraightLegend(w,h,t,wave){
+  const cx = w/2, cy = h/2;
+  const baseY = cy;
+  ctx.strokeStyle = "#2c3e50";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(cx - 150, baseY);
+  ctx.lineTo(cx + 150, baseY);
+  ctx.stroke();
+  ctx.fillStyle = "rgba(41,128,185,0.18)";
+  ctx.fillRect(cx - 150, baseY - 20, 300, 40);
+  ctx.strokeStyle = "#e74c3c";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  for(let x = cx - 150; x <= cx + 150; x += 2){
+    const y = baseY + wave * 12 * Math.sin((x - cx) * 0.025);
+    if(x === cx - 150) ctx.moveTo(x,y);
+    else ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+  drawDimensionArrow(ctx, cx - 160, baseY - 20, cx - 160, baseY + 20, `${t} μm`);
+  ctx.fillStyle = "#2980b9";
+  ctx.font = "14px Microsoft Yahei";
+  ctx.textAlign = "center";
+  ctx.fillText("直线度公差带：两平行直线之间的区域", cx, cy + 55);
+}
+function drawFlatLegend(w,h,t,wave){
+  const cx = w/2, cy = h/2;
+  ctx.fillStyle = "rgba(41,128,185,0.18)";
+  ctx.beginPath();
+  ctx.moveTo(cx - 130, cy - 35 + wave * 3);
+  ctx.lineTo(cx + 130, cy - 35 - wave * 3);
+  ctx.lineTo(cx + 130, cy + 35 - wave * 3);
+  ctx.lineTo(cx - 130, cy + 35 + wave * 3);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "#2c3e50";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(cx - 130, cy - 35);
+  ctx.lineTo(cx + 130, cy - 35);
+  ctx.lineTo(cx + 130, cy + 35);
+  ctx.lineTo(cx - 130, cy + 35);
+  ctx.closePath();
+  ctx.stroke();
+  drawDimensionArrow(ctx, cx + 140, cy - 35, cx + 140, cy + 35, `${t} μm`);
+  ctx.fillStyle = "#2980b9";
+  ctx.font = "14px Microsoft Yahei";
+  ctx.textAlign = "center";
+  ctx.fillText("平面度公差带：两平行平面之间的区域", cx, cy + 60);
+}
+function drawRoundLegend(w,h,t,wave){
+  const cx = w/2, cy = h/2;
+  const r = Math.min(w,h)/4.5;
+  ctx.strokeStyle = "#2c3e50";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.strokeStyle = "#e74c3c";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  for(let a = 0; a <= Math.PI * 2; a += 0.02){
+    const rr = r + wave * 10 * Math.cos(a * 5);
+    const x = cx + rr * Math.cos(a);
+    const y = cy + rr * Math.sin(a);
+    if(a === 0) ctx.moveTo(x,y);
+    else ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+  drawDimensionArrow(ctx, cx + r + 30, cy - r, cx + r + 30, cy + r, `${t} μm`);
+  ctx.fillStyle = "#2980b9";
+  ctx.font = "14px Microsoft Yahei";
+  ctx.textAlign = "center";
+  ctx.fillText("圆度公差带：同一正截面上两同心圆之间的区域", cx, cy + r + 45);
+}
+function drawCylinderLegend(w,h,t,wave){
+  const cx = w/2, cy = h/2;
+  ctx.strokeStyle = "#2c3e50";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.ellipse(cx - 70, cy, 28, 38, 0, 0, Math.PI * 2);
+  ctx.ellipse(cx + 70, cy, 28, 38, 0, 0, Math.PI * 2);
+  ctx.moveTo(cx - 70, cy - 38);
+  ctx.lineTo(cx + 70, cy - 38);
+  ctx.moveTo(cx - 70, cy + 38);
+  ctx.lineTo(cx + 70, cy + 38);
+  ctx.stroke();
+  ctx.strokeStyle = "#e74c3c";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy + wave * 5, 28, 38, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  drawDimensionArrow(ctx, cx + 110, cy - 38, cx + 110, cy + 38, `${t} μm`);
+  ctx.fillStyle = "#2980b9";
+  ctx.font = "14px Microsoft Yahei";
+  ctx.textAlign = "center";
+  ctx.fillText("圆柱度公差带：半径差为公差值的两同轴圆柱面之间", cx, cy + 55);
+}
+function drawParallelLegend(w,h,t,wave){
+  const cx = w/2, cy = h/2;
+  ctx.strokeStyle = "#2c3e50";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(cx - 130, cy - 45);
+  ctx.lineTo(cx + 130, cy - 45);
+  ctx.stroke();
+  ctx.fillStyle = "#2c3e50";
+  ctx.font = "bold 14px Microsoft Yahei";
+  ctx.textAlign = "left";
+  ctx.fillText("基准A", cx - 145, cy - 41);
+  ctx.fillStyle = "rgba(41,128,185,0.18)";
+  ctx.fillRect(cx - 130, cy + 25, 260, 35);
+  ctx.strokeStyle = "#e74c3c";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(cx - 130, cy + 25 + wave * 8);
+  ctx.lineTo(cx + 130, cy + 25 - wave * 8);
+  ctx.lineTo(cx + 130, cy + 60 - wave * 8);
+  ctx.lineTo(cx - 130, cy + 60 + wave * 8);
+  ctx.closePath();
+  ctx.stroke();
+  drawDimensionArrow(ctx, cx + 145, cy + 25, cx + 145, cy + 60, `${t} μm`);
+  ctx.fillStyle = "#2980b9";
+  ctx.font = "14px Microsoft Yahei";
+  ctx.textAlign = "center";
+  ctx.fillText("平行度公差带：平行于基准A的两平行平面之间", cx, cy + 85);
+}
+function drawPerpendicularLegend(w,h,t,wave){
+  const cx = w/2, cy = h/2;
+  ctx.strokeStyle = "#2c3e50";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(cx - 100, cy);
+  ctx.lineTo(cx + 100, cy);
+  ctx.stroke();
+  ctx.fillStyle = "#2c3e50";
+  ctx.font = "bold 14px Microsoft Yahei";
+  ctx.textAlign = "left";
+  ctx.fillText("基准A", cx - 115, cy + 4);
+  ctx.fillStyle = "rgba(41,128,185,0.18)";
+  ctx.fillRect(cx - 25, cy - 70, 50, 140);
+  ctx.strokeStyle = "#e74c3c";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(cx - 25 + wave * 6, cy - 70);
+  ctx.lineTo(cx - 25 + wave * 6, cy + 70);
+  ctx.stroke();
+  drawDimensionArrow(ctx, cx + 35, cy - 70, cx + 35, cy + 70, `${t} μm`);
+  ctx.fillStyle = "#2980b9";
+  ctx.font = "14px Microsoft Yahei";
+  ctx.textAlign = "center";
+  ctx.fillText("垂直度公差带：垂直于基准A的两平行平面之间", cx, cy + 95);
+}
+function drawAngularLegend(w,h,t,wave){
+  const cx = w/2, cy = h/2;
+  const angle = Math.PI / 6;
+  ctx.strokeStyle = "#2c3e50";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(cx - 120, cy + 40);
+  ctx.lineTo(cx + 120, cy + 40);
+  ctx.stroke();
+  ctx.fillStyle = "#2c3e50";
+  ctx.font = "bold 14px Microsoft Yahei";
+  ctx.textAlign = "left";
+  ctx.fillText("基准A", cx - 135, cy + 44);
+  ctx.strokeStyle = "#e74c3c";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(cx + 100 * Math.cos(angle + wave * 0.015), cy - 100 * Math.sin(angle + wave * 0.015));
+  ctx.stroke();
+  drawDimensionArrow(ctx, cx + 50, cy - 50, cx + 80, cy - 80, `${t} μm`);
+  ctx.fillStyle = "#2980b9";
+  ctx.font = "14px Microsoft Yahei";
+  ctx.textAlign = "center";
+  ctx.fillText("倾斜度公差带：与基准A成理论正确角度的两平行平面之间", cx, cy + 75);
+}
+function drawConcentricLegend(w,h,t,wave){
+  const cx = w/2, cy = h/2;
+  const r1 = 35;
+  const r2 = 55;
+  ctx.strokeStyle = "#2c3e50";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r1, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.fillStyle = "rgba(41,128,185,0.18)";
+  ctx.beginPath();
+  ctx.arc(cx, cy, r2, 0, Math.PI * 2);
+  ctx.arc(cx, cy, r1, 0, Math.PI * 2, true);
+  ctx.fill();
+  ctx.strokeStyle = "#e74c3c";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(cx + wave * 8, cy, r1, 0, Math.PI * 2);
+  ctx.stroke();
+  drawDimensionArrow(ctx, cx + r2 + 25, cy - r2, cx + r2 + 25, cy + r2, `${t} μm`);
+  ctx.fillStyle = "#2980b9";
+  ctx.font = "14px Microsoft Yahei";
+  ctx.textAlign = "center";
+  ctx.fillText("同轴度公差带：与基准轴线同轴的圆柱面内", cx, cy + r2 + 45);
+}
+function drawSymmetricLegend(w,h,t,wave){
+  const cx = w/2, cy = h/2;
+  ctx.strokeStyle = "#2c3e50";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(cx - 100, cy);
+  ctx.lineTo(cx + 100, cy);
+  ctx.stroke();
+  ctx.fillStyle = "rgba(41,128,185,0.18)";
+  ctx.fillRect(cx - 35, cy - 30, 70, 60);
+  ctx.strokeStyle = "#e74c3c";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(cx - 35 + wave * 5, cy - 30, 70, 60);
+  drawDimensionArrow(ctx, cx + 50, cy - 30, cx + 50, cy + 30, `${t} μm`);
+  ctx.fillStyle = "#2980b9";
+  ctx.font = "14px Microsoft Yahei";
+  ctx.textAlign = "center";
+  ctx.fillText("对称度公差带：相对于基准中心平面对称配置的两平行平面之间", cx, cy + 55);
+}
+function drawCircleRunoutLegend(w,h,t,wave){
+  const cx = w/2, cy = h/2;
+  const r = 45;
+  ctx.strokeStyle = "#2c3e50";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.strokeStyle = "#e74c3c";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  for(let a = 0; a <= Math.PI * 2; a += 0.02){
+    const rr = r + Math.abs(wave) * 12;
+    const x = cx + rr * Math.cos(a);
+    const y = cy + rr * Math.sin(a);
+    if(a === 0) ctx.moveTo(x,y);
+    else ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+  drawDimensionArrow(ctx, cx + r + 30, cy - r, cx + r + 30, cy + r, `${t} μm`);
+  ctx.fillStyle = "#2980b9";
+  ctx.font = "14px Microsoft Yahei";
+  ctx.textAlign = "center";
+  ctx.fillText("圆跳动公差带：垂直于基准轴线的测量平面内", cx, cy + r + 45);
+}
+function drawFullRunoutLegend(w,h,t,wave){
+  const cx = w/2, cy = h/2;
+  ctx.strokeStyle = "#2c3e50";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.ellipse(cx - 65, cy, 25, 35, 0, 0, Math.PI * 2);
+  ctx.ellipse(cx + 65, cy, 25, 35, 0, 0, Math.PI * 2);
+  ctx.moveTo(cx - 65, cy - 35);
+  ctx.lineTo(cx + 65, cy - 35);
+  ctx.moveTo(cx - 65, cy + 35);
+  ctx.lineTo(cx + 65, cy + 35);
+  ctx.stroke();
+  ctx.strokeStyle = "#e74c3c";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy + wave * 6, 25, 35, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  drawDimensionArrow(ctx, cx + 105, cy - 35, cx + 105, cy + 35, `${t} μm`);
+  ctx.fillStyle = "#2980b9";
+  ctx.font = "14px Microsoft Yahei";
+  ctx.textAlign = "center";
+  ctx.fillText("全跳动公差带：沿整个被测表面连续回转测量", cx, cy + 55);
+}
+
+// 主绘图循环
+function draw(){
+  frame++;
+  const w = canvas.width / window.devicePixelRatio;
+  const h = canvas.height / window.devicePixelRatio;
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle = "#fafafa";
+  ctx.fillRect(0,0,w,h);
+  const t = currentTol;
+  const wave = Math.sin(frame * 0.04);
+  ctx.fillStyle = "#2c3e50";
+  ctx.font = "bold 18px Microsoft Yahei";
+  ctx.textAlign = "center";
+  ctx.fillText(typeNameMap[currentMode], w/2, 26);
+
+  switch(currentMode){
+    case "straight": drawStraightLegend(w,h,t,wave); break;
+    case "flat": drawFlatLegend(w,h,t,wave); break;
+    case "round": drawRoundLegend(w,h,t,wave); break;
+    case "cylinder": drawCylinderLegend(w,h,t,wave); break;
+    case "parallel": drawParallelLegend(w,h,t,wave); break;
+    case "perpendicular": drawPerpendicularLegend(w,h,t,wave); break;
+    case "angular": drawAngularLegend(w,h,t,wave); break;
+    case "concentric": drawConcentricLegend(w,h,t,wave); break;
+    case "symmetric": drawSymmetricLegend(w,h,t,wave); break;
+    case "circleRunout": drawCircleRunoutLegend(w,h,t,wave); break;
+    case "fullRunout": drawFullRunoutLegend(w,h,t,wave); break;
+  }
+  requestAnimationFrame(draw);
+}
+
+// 初始化绑定事件 & DOM就绪后执行
+document.addEventListener("DOMContentLoaded", function(){
+  resizeCanvas();
+  updateSelectOptions();
+  mainTypeSelect.addEventListener("change", updateSelectOptions);
+  userSizeInput.addEventListener("input", autoMatchSizeInterval);
+  sizeSelect.addEventListener("change", updateResult);
+  gradeSelect.addEventListener("change", updateResult);
+  draw();
+});
+</script>
+</body>
+</html>
