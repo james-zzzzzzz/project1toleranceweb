@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>幼儿26字母英语启蒙｜真实动物版</title>
+<title>幼儿26字母英语启蒙｜4按钮发音版</title>
 <style>
     * {
         margin: 0;
@@ -130,7 +130,6 @@
     .tip {
         font-size: 13px;
         color: #bbb;
-        text-align: center;
         margin-top: 18px;
         line-height: 1.6;
     }
@@ -145,87 +144,11 @@
         font-size: 18px;
         cursor: pointer;
     }
-
-    /* 动物照片弹窗 */
-    .animal-modal {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100dvh;
-        background: rgba(0,0,0,0.5);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 10;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.3s ease;
-    }
-
-    .animal-modal.show {
-        opacity: 1;
-        pointer-events: auto;
-    }
-
-    .animal-modal-card {
-        background: white;
-        width: 300px;
-        border-radius: 24px;
-        overflow: hidden;
-        transform: translateY(50px);
-        transition: transform 0.4s ease;
-    }
-
-    .animal-modal.show .animal-modal-card {
-        transform: translateY(0);
-    }
-
-    .animal-photo {
-        width: 100%;
-        height: 220px;
-        background: #eee;
-        overflow: hidden;
-    }
-
-    .animal-photo img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display:block;
-    }
-
-    .animal-info {
-        padding: 16px;
-        text-align: center;
-    }
-
-    .animal-info h2 {
-        font-size: 28px;
-        color: #42b983;
-        margin-bottom: 8px;
-    }
-
-    .animal-info p {
-        color: #666;
-        font-size: 16px;
-    }
-
-    .close-btn {
-        margin-top: 12px;
-        padding: 8px 24px;
-        background: #ff7096;
-        color: white;
-        border: none;
-        border-radius: 50px;
-        cursor: pointer;
-        font-size: 16px;
-    }
 </style>
 </head>
 <body>
 
-<h1>📖 字母动物启蒙英语｜真实动物版</h1>
+<h1>📖 字母动物启蒙英语｜4按钮发音版</h1>
 
 <div class="control-buttons">
     <button class="ctrl-btn" id="btnUK">英式发音</button>
@@ -245,55 +168,41 @@
 
         <div class="tip">
             点击字母读字母<br>
-            点击单词查看动物
+            点击单词读单词
         </div>
     </div>
 </div>
 
 <button class="btn-next" id="nextBtn">随机换字母</button>
 
-<div class="animal-modal" id="animalModal">
-    <div class="animal-modal-card">
-        <div class="animal-photo">
-            <img id="animalImg" alt="真实动物照片" crossorigin="anonymous" onerror="this.src='https://via.placeholder.com/300x220/cccccc/666666?text=Animal'">
-        </div>
-        <div class="animal-info">
-            <h2 id="modalLetter">A</h2>
-            <p id="modalWord">Alligator 鳄鱼</p>
-            <button class="close-btn" id="closeBtn">关闭</button>
-        </div>
-    </div>
-</div>
-
 <script>
-    // 真实成年动物照片（非幼崽可爱版）
     const letterData = [
-        { letter: "A", word: "Alligator", cn: "鳄鱼", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/American_alligator_%28Alligator_mississippiensis%29.jpg/600px-American_alligator_%28Alligator_mississippiensis%29.jpg" },
-        { letter: "B", word: "Bee", cn: "蜜蜂", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Western_honey_bee_%28Apis_mellifera%29.jpg/600px-Western_honey_bee_%28Apis_mellifera%29.jpg" },
-        { letter: "C", word: "Caterpillar", cn: "毛毛虫", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/Milkweed_tussock_moth_caterpillar.jpg/600px-Milkweed_tussock_moth_caterpillar.jpg" },
-        { letter: "D", word: "Duck", cn: "鸭子", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/Mallard_duck_male.jpg/600px-Mallard_duck_male.jpg" },
-        { letter: "E", word: "Elephant", cn: "大象", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/African_Bush_Elephant.jpg/600px-African_Bush_Elephant.jpg" },
-        { letter: "F", word: "Fish", cn: "鱼", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Goldfish_2.jpg/600px-Goldfish_2.jpg" },
-        { letter: "G", word: "Goose", cn: "鹅", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/Canada_goose_%28Branta_canadensis%29.jpg/600px-Canada_goose_%28Branta_canadensis%29.jpg" },
-        { letter: "H", word: "Horse", cn: "马", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Arabian_horse.jpg/600px-Arabian_horse.jpg" },
-        { letter: "I", word: "Iguana", cn: "鬣蜥", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Green_iguana.jpg/600px-Green_iguana.jpg" },
-        { letter: "J", word: "Jaguar", cn: "美洲豹", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Jaguar_%28Panthera_onca%29.jpg/600px-Jaguar_%28Panthera_onca%29.jpg" },
-        { letter: "K", word: "Koala", cn: "考拉", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Koala_in_eucalyptus_tree.jpg/600px-Koala_in_eucalyptus_tree.jpg" },
-        { letter: "L", word: "Leaf", cn: "树叶", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Maple_leaf_autumn.jpg/600px-Maple_leaf_autumn.jpg" },
-        { letter: "M", word: "Monkey", cn: "猴子", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Rhesus_macaque.jpg/600px-Rhesus_macaque.jpg" },
-        { letter: "N", word: "Nest", cn: "鸟巢", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Bird_nest_with_eggs.jpg/600px-Bird_nest_with_eggs.jpg" },
-        { letter: "O", word: "Owl", cn: "猫头鹰", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Barn_owl.jpg/600px-Barn_owl.jpg" },
-        { letter: "P", word: "Panda", cn: "熊猫", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Giant_panda_bamboo.jpg/600px-Giant_panda_bamboo.jpg" },
-        { letter: "Q", word: "Quail", cn: "鹌鹑", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Japanese_quail.jpg/600px-Japanese_quail.jpg" },
-        { letter: "R", word: "Rabbit", cn: "兔子", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/European_rabbit.jpg/600px-European_rabbit.jpg" },
-        { letter: "S", word: "Snake", cn: "蛇", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Garter_snake.jpg/600px-Garter_snake.jpg" },
-        { letter: "T", word: "Tulip", cn: "郁金香", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/Tulip_red.jpg/600px-Tulip_red.jpg" },
-        { letter: "U", word: "Umbrella plant", cn: "伞草", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Cyperus_alternifolius.jpg/600px-Cyperus_alternifolius.jpg" },
-        { letter: "V", word: "Vulture", cn: "秃鹫", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Griffon_vulture.jpg/600px-Griffon_vulture.jpg" },
-        { letter: "W", word: "Whale", cn: "鲸鱼", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Humpback_whale.jpg/600px-Humpback_whale.jpg" },
-        { letter: "X", word: "X-ray fish", cn: "X光鱼", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/Guppy_fish.jpg/600px-Guppy_fish.jpg" },
-        { letter: "Y", word: "Yak", cn: "牦牛", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Tibetan_yak.jpg/600px-Tibetan_yak.jpg" },
-        { letter: "Z", word: "Zebra", cn: "斑马", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Plains_zebra.jpg/600px-Plains_zebra.jpg" }
+        { letter: "A", word: "Alligator", cn: "鳄鱼" },
+        { letter: "B", word: "Bee", cn: "蜜蜂" },
+        { letter: "C", word: "Caterpillar", cn: "毛毛虫" },
+        { letter: "D", word: "Duck", cn: "鸭子" },
+        { letter: "E", word: "Elephant", cn: "大象" },
+        { letter: "F", word: "Fish", cn: "鱼" },
+        { letter: "G", word: "Goose", cn: "鹅" },
+        { letter: "H", word: "Horse", cn: "马" },
+        { letter: "I", word: "Iguana", cn: "鬣蜥" },
+        { letter: "J", word: "Jaguar", cn: "美洲豹" },
+        { letter: "K", word: "Koala", cn: "考拉" },
+        { letter: "L", word: "Leaf", cn: "树叶" },
+        { letter: "M", word: "Monkey", cn: "猴子" },
+        { letter: "N", word: "Nest", cn: "鸟巢" },
+        { letter: "O", word: "Owl", cn: "猫头鹰" },
+        { letter: "P", word: "Panda", cn: "熊猫" },
+        { letter: "Q", word: "Quail", cn: "鹌鹑" },
+        { letter: "R", word: "Rabbit", cn: "兔子" },
+        { letter: "S", word: "Snake", cn: "蛇" },
+        { letter: "T", word: "Tulip", cn: "郁金香" },
+        { letter: "U", word: "Umbrella plant", cn: "伞草" },
+        { letter: "V", word: "Vulture", cn: "秃鹫" },
+        { letter: "W", word: "Whale", cn: "鲸鱼" },
+        { letter: "X", word: "X-ray fish", cn: "X光鱼" },
+        { letter: "Y", word: "Yak", cn: "牦牛" },
+        { letter: "Z", word: "Zebra", cn: "斑马" }
     ];
 
     let isUK = true;
@@ -307,21 +216,16 @@
     const cnName = document.getElementById('cnName');
     const wordBox = document.getElementById('wordBox');
     const nextBtn = document.getElementById('nextBtn');
-
     const btnUK = document.getElementById('btnUK');
     const btnUS = document.getElementById('btnUS');
     const btnFemale = document.getElementById('btnFemale');
     const btnMale = document.getElementById('btnMale');
 
-    const animalModal = document.getElementById('animalModal');
-    const animalImg = document.getElementById('animalImg');
-    const modalLetter = document.getElementById('modalLetter');
-    const modalWord = document.getElementById('modalWord');
-    const closeBtn = document.getElementById('closeBtn');
-
-    // 加载语音，过滤异常语音
+    // 加载并筛选正规英文语音，剔除异常语音
     function loadVoices() {
-        voices = window.speechSynthesis.getVoices().filter(v => !v.name.toLowerCase().includes('kapetou'));
+        voices = window.speechSynthesis.getVoices().filter(v => {
+            return (v.lang.startsWith('en-GB') || v.lang.startsWith('en-US')) && !v.name.toLowerCase().includes('kapetou') && !v.name.toLowerCase().includes('异常');
+        });
     }
     window.speechSynthesis.onvoiceschanged = loadVoices;
     loadVoices();
@@ -339,6 +243,29 @@
     btnFemale.onclick = () => { isMale = false; updateBtnStyle(); };
     btnMale.onclick = () => { isMale = true; updateBtnStyle(); };
 
+    function speak(text) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = isUK ? 'en-GB' : 'en-US';
+        utterance.rate = 0.7;
+        utterance.pitch = isMale ? 0.9 : 1;
+
+        // 匹配对应口音语音
+        const targetVoices = voices.filter(v => v.lang.startsWith(isUK ? 'en-GB' : 'en-US'));
+        if (targetVoices.length > 0) {
+            if (isMale) {
+                // 优先男声英文语音
+                const maleVoice = targetVoices.find(v => v.gender === 'male' || v.name.toLowerCase().includes('male')) || targetVoices[0];
+                utterance.voice = maleVoice;
+            } else {
+                // 优先女声英文语音
+                const femaleVoice = targetVoices.find(v => v.gender === 'female' || v.name.toLowerCase().includes('female')) || targetVoices[0];
+                utterance.voice = femaleVoice;
+            }
+        }
+        window.speechSynthesis.speak(utterance);
+    }
+
     function randomLetter() {
         const newIndex = Math.floor(Math.random() * letterData.length);
         currentIndex = newIndex;
@@ -352,40 +279,7 @@
         cnName.textContent = item.cn;
     }
 
-    function speak(text) {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = isUK ? 'en-GB' : 'en-US';
-        utterance.rate = 0.7;
-        utterance.pitch = isMale ? 0.9 : 1;
-
-        const targetVoices = voices.filter(v => v.lang.startsWith(isUK ? 'en-GB' : 'en-US'));
-        if (targetVoices.length > 0) {
-            if (isMale) {
-                const maleVoice = targetVoices.find(v => v.gender === 'male' || v.name.toLowerCase().includes('male')) || targetVoices[0];
-                utterance.voice = maleVoice;
-            } else {
-                const femaleVoice = targetVoices.find(v => v.gender === 'female' || v.name.toLowerCase().includes('female')) || targetVoices[0];
-                utterance.voice = femaleVoice;
-            }
-        }
-        window.speechSynthesis.speak(utterance);
-    }
-
-    function showAnimalCard() {
-        const item = letterData[currentIndex];
-        modalLetter.textContent = item.letter;
-        modalWord.textContent = `${item.word} ${item.cn}`;
-        animalImg.src = item.photo;
-        animalModal.classList.add('show');
-        speak(item.word);
-    }
-
-    function closeAnimalCard() {
-        animalModal.classList.remove('show');
-    }
-
-    // 点击字母发音
+    // 点击字母发音 + 动画
     letterDisplay.addEventListener('click', () => {
         const item = letterData[currentIndex];
         card.classList.add('animate');
@@ -395,18 +289,10 @@
         }, 350);
     });
 
-    // 点击单词弹窗
-    wordBox.addEventListener('click', showAnimalCard);
-
-    // 点击图片重读单词
-    animalImg.addEventListener('click', () => {
+    // 点击单词发音（无图片弹窗）
+    wordBox.addEventListener('click', () => {
         const item = letterData[currentIndex];
         speak(item.word);
-    });
-
-    closeBtn.addEventListener('click', closeAnimalCard);
-    animalModal.addEventListener('click', (e) => {
-        if (e.target === animalModal) closeAnimalCard();
     });
 
     nextBtn.addEventListener('click', randomLetter);
