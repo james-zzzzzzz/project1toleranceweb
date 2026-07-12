@@ -1,267 +1,365 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>幼儿26字母英语启蒙｜在线真实录音版</title>
-<style>
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        font-family: "Microsoft YaHei", sans-serif;
-        touch-action: manipulation;
-        -webkit-tap-highlight-color: transparent;
-    }
-
-    html, body {
-        background: #fff7e6;
-        width: 100%;
-        height: 100dvh;
-        overflow: hidden;
-        position: fixed;
-        top: 0;
-        left: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        overscroll-behavior: none;
-    }
-
-    h1 {
-        color: #ff7096;
-        margin-bottom: 12px;
-        font-size: 24px;
-    }
-
-    .control-buttons {
-        display: flex;
-        gap: 8px;
-        margin-bottom: 18px;
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-
-    .ctrl-btn {
-        padding: 8px 12px;
-        border-radius: 20px;
-        border: none;
-        background: #70bfff;
-        color: white;
-        font-size: 15px;
-        cursor: pointer;
-    }
-
-    .ctrl-btn.active {
-        background: #2980b9;
-    }
-
-    .card-container {
-        width: 320px;
-        height: 420px;
-        position: relative;
-        perspective: 1000px;
-    }
-
-    .letter-card {
-        width: 100%;
-        height: 100%;
-        background: white;
-        border-radius: 24px;
-        box-shadow: 0 6px 18px rgba(0,0,0,0.1);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-        position: absolute;
-        top: 0;
-        left: 0;
-        transition: transform 0.4s ease;
-        z-index: 2;
-    }
-
-    .letter-card.animate {
-        transform: scale(1.1) rotate(3deg);
-    }
-
-    .big-letter {
-        font-size: 110px;
-        font-weight: bold;
-        color: #42b983;
-        cursor: pointer;
-        user-select: none;
-        transition: transform 0.2s ease;
-    }
-
-    .word-box {
-        margin-top: 20px;
-        padding: 12px 24px;
-        background: #ffedcc;
-        border-radius: 50px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .word-box:hover {
-        background: #ffdf99;
-        transform: scale(1.05);
-    }
-
-    .word-box:active {
-        transform: scale(0.95);
-    }
-
-    .animal-word {
-        font-size: 24px;
-        color: #666;
-        font-weight: bold;
-    }
-
-    .cn-name {
-        font-size: 16px;
-        color: #999;
-        margin-top: 4px;
-    }
-
-    .tip {
-        font-size: 13px;
-        color: #bbb;
-        margin-top: 18px;
-        line-height: 1.6;
-    }
-
-    .btn-next {
-        margin-top: 20px;
-        padding: 12px 30px;
-        background: #57cc99;
-        color: white;
-        border: none;
-        border-radius: 50px;
-        font-size: 18px;
-        cursor: pointer;
-    }
-</style>
+    <meta charset="UTF-8">
+    <!-- 固定视口，禁止全局缩放 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>幼儿26字母英语启蒙</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+            touch-action: manipulation; /* 禁用浏览器双击缩放 */
+        }
+        html, body {
+            background: #fff7e6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            /* 锁定整体布局，禁止全局变形 */
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        h1 {
+            color: #ff7096;
+            margin-bottom: 30px;
+            font-size: 28px;
+            text-align: center;
+        }
+        .card-container {
+            width: 320px;
+            height: 420px;
+            position: relative;
+            perspective: 1000px;
+        }
+        .letter-card {
+            width: 100%;
+            height: 100%;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            transition: transform 0.4s ease;
+            z-index: 2;
+        }
+        .letter-card.animate {
+            transform: scale(1.1) rotate(3deg);
+        }
+        .big-letter {
+            font-size: 110px;
+            font-weight: bold;
+            color: #42b983;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.2s ease;
+        }
+        .big-letter:hover {
+            transform: scale(1.08);
+        }
+        .big-letter:active {
+            transform: scale(0.95);
+        }
+        .word-box {
+            margin-top: 20px;
+            padding: 12px 24px;
+            background: #ffedcc;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .word-box:hover {
+            background: #ffdf99;
+            transform: scale(1.05);
+        }
+        .word-box:active {
+            transform: scale(0.95);
+        }
+        .animal-word {
+            font-size: 24px;
+            color: #666;
+            font-weight: bold;
+        }
+        .cn-name {
+            font-size: 16px;
+            color: #999;
+            margin-top: 4px;
+        }
+        .tip {
+            font-size: 14px;
+            color: #bbb;
+            text-align: center;
+            margin-top: 18px;
+            line-height: 1.6;
+        }
+        .btn-next {
+            margin-top: 30px;
+            padding: 12px 30px;
+            background: #57cc99;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .btn-next:hover {
+            background: #38a3a5;
+        }
+        .btn-next:active {
+            background: #2d7a7c;
+        }
+        /* 动物图片卡片 */
+        .animal-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .animal-modal.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .animal-modal-card {
+            background: white;
+            width: 300px;
+            border-radius: 24px;
+            overflow: hidden;
+            transform: translateY(50px);
+            transition: transform 0.4s ease;
+        }
+        .animal-modal.show .animal-modal-card {
+            transform: translateY(0);
+        }
+        .animal-image {
+            width: 100%;
+            height: 220px;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        .animal-image:hover {
+            transform: scale(1.02);
+        }
+        .animal-info {
+            padding: 16px;
+            text-align: center;
+        }
+        .animal-info h2 {
+            font-size: 28px;
+            color: #42b983;
+            margin-bottom: 8px;
+        }
+        .animal-info p {
+            color: #666;
+            font-size: 16px;
+        }
+        .close-btn {
+            margin-top: 12px;
+            padding: 8px 24px;
+            background: #ff7096;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .close-btn:hover {
+            background: #ff4d6d;
+        }
+    </style>
 </head>
 <body>
+    <h1>📖 字母动物启蒙英语</h1>
 
-<h1>📖 字母动物启蒙英语｜在线真实录音版</h1>
+    <div class="card-container">
+        <div class="letter-card" id="card">
+            <div class="big-letter" id="letterDisplay">A</div>
 
-<div class="control-buttons">
-    <button class="ctrl-btn" id="btnUK">英式发音</button>
-    <button class="ctrl-btn" id="btnUS">美式发音</button>
-</div>
+            <div class="word-box" id="wordBox">
+                <div class="animal-word" id="animalWord">Alligator</div>
+                <div class="cn-name" id="cnName">鳄鱼</div>
+            </div>
 
-<div class="card-container">
-    <div class="letter-card" id="card">
-        <div class="big-letter" id="letterDisplay">A</div>
-
-        <div class="word-box" id="wordBox">
-            <div class="animal-word" id="animalWord">Alligator</div>
-            <div class="cn-name" id="cnName">鳄鱼</div>
-        </div>
-
-        <div class="tip">
-            点击字母读字母<br>
-            点击单词读单词
+            <div class="tip">
+                点击字母发音<br>
+                点击单词看动物
+            </div>
         </div>
     </div>
-</div>
 
-<button class="btn-next" id="nextBtn">随机换字母</button>
+    <button class="btn-next" id="nextBtn">随机换字母</button>
 
-<script>
-    const letterData = [
-        { letter: "A", word: "Alligator", cn: "鳄鱼" },
-        { letter: "B", word: "Bee", cn: "蜜蜂" },
-        { letter: "C", word: "Caterpillar", cn: "毛毛虫" },
-        { letter: "D", word: "Duck", cn: "鸭子" },
-        { letter: "E", word: "Elephant", cn: "大象" },
-        { letter: "F", word: "Fish", cn: "鱼" },
-        { letter: "G", word: "Goose", cn: "鹅" },
-        { letter: "H", word: "Horse", cn: "马" },
-        { letter: "I", word: "Iguana", cn: "鬣蜥" },
-        { letter: "J", word: "Jaguar", cn: "美洲豹" },
-        { letter: "K", word: "Koala", cn: "考拉" },
-        { letter: "L", word: "Leaf", cn: "树叶" },
-        { letter: "M", word: "Monkey", cn: "猴子" },
-        { letter: "N", word: "Nest", cn: "鸟巢" },
-        { letter: "O", word: "Owl", cn: "猫头鹰" },
-        { letter: "P", word: "Panda", cn: "熊猫" },
-        { letter: "Q", word: "Quail", cn: "鹌鹑" },
-        { letter: "R", word: "Rabbit", cn: "兔子" },
-        { letter: "S", word: "Snake", cn: "蛇" },
-        { letter: "T", word: "Tulip", cn: "郁金香" },
-        { letter: "U", word: "Umbrella plant", cn: "伞草" },
-        { letter: "V", word: "Vulture", cn: "秃鹫" },
-        { letter: "W", word: "Whale", cn: "鲸鱼" },
-        { letter: "X", word: "X-ray fish", cn: "X光鱼" },
-        { letter: "Y", word: "Yak", cn: "牦牛" },
-        { letter: "Z", word: "Zebra", cn: "斑马" }
-    ];
+    <!-- 动物图片卡片弹窗 -->
+    <div class="animal-modal" id="animalModal">
+        <div class="animal-modal-card">
+            <div class="animal-image" id="animalImage">🐊</div>
+            <div class="animal-info">
+                <h2 id="modalLetter">A</h2>
+                <p id="modalWord">Alligator 鳄鱼</p>
+                <button class="close-btn" id="closeBtn">关闭</button>
+            </div>
+        </div>
+    </div>
 
-    let isUK = true;
-    let currentIndex = 0;
+    <script>
+        const letterData = [
+            { letter: "A", word: "Alligator", cn: "鳄鱼", emoji: "🐊" },
+            { letter: "B", word: "Bee", cn: "蜜蜂", emoji: "🐝" },
+            { letter: "C", word: "Caterpillar", cn: "毛毛虫", emoji: "🐛" },
+            { letter: "D", word: "Duck", cn: "鸭子", emoji: "🦆" },
+            { letter: "E", word: "Elephant", cn: "大象", emoji: "🐘" },
+            { letter: "F", word: "Fish", cn: "小鱼", emoji: "🐟" },
+            { letter: "G", word: "Goose", cn: "大白鹅", emoji: "🦢" },
+            { letter: "H", word: "Horse", cn: "小马", emoji: "🐴" },
+            { letter: "I", word: "Iguana", cn: "蜥蜴", emoji: "🦎" },
+            { letter: "J", word: "Jaguar", cn: "美洲豹", emoji: "🐆" },
+            { letter: "K", word: "Koala", cn: "考拉", emoji: "🐨" },
+            { letter: "L", word: "Leaf", cn: "树叶", emoji: "🍃" },
+            { letter: "M", word: "Monkey", cn: "猴子", emoji: "🐵" },
+            { letter: "N", word: "Nest", cn: "鸟巢", emoji: "🪺" },
+            { letter: "O", word: "Owl", cn: "猫头鹰", emoji: "🦉" },
+            { letter: "P", word: "Panda", cn: "熊猫", emoji: "🐼" },
+            { letter: "Q", word: "Quail", cn: "鹌鹑", emoji: "🐦" },
+            { letter: "R", word: "Rabbit", cn: "兔子", emoji: "🐰" },
+            { letter: "S", word: "Snake", cn: "小蛇", emoji: "🐍" },
+            { letter: "T", word: "Tulip", cn: "郁金香", emoji: "🌷" },
+            { letter: "U", word: "Umbrella plant", cn: "伞草", emoji: "🌿" },
+            { letter: "V", word: "Vulture", cn: "秃鹫", emoji: "🦅" },
+            { letter: "W", word: "Whale", cn: "鲸鱼", emoji: "🐋" },
+            { letter: "X", word: "X-ray fish", cn: "X光鱼", emoji: "🐠" },
+            { letter: "Y", word: "Yak", cn: "牦牛", emoji: "🐂" },
+            { letter: "Z", word: "Zebra", cn: "斑马", emoji: "🦓" }
+        ];
 
-    const card = document.getElementById('card');
-    const letterDisplay = document.getElementById('letterDisplay');
-    const animalWord = document.getElementById('animalWord');
-    const cnName = document.getElementById('cnName');
-    const wordBox = document.getElementById('wordBox');
-    const nextBtn = document.getElementById('nextBtn');
-    const btnUK = document.getElementById('btnUK');
-    const btnUS = document.getElementById('btnUS');
+        let currentIndex = 0;
+        let voices = [];
+        let lastTouchEnd = 0;
 
-    function updateBtnStyle() {
-        btnUK.classList.toggle('active', isUK);
-        btnUS.classList.toggle('active', !isUK);
-    }
-    updateBtnStyle();
+        const card = document.getElementById('card');
+        const letterDisplay = document.getElementById('letterDisplay');
+        const animalWord = document.getElementById('animalWord');
+        const cnName = document.getElementById('cnName');
+        const wordBox = document.getElementById('wordBox');
+        const nextBtn = document.getElementById('nextBtn');
 
-    btnUK.onclick = () => { isUK = true; updateBtnStyle(); };
-    btnUS.onclick = () => { isUK = false; updateBtnStyle(); };
+        const animalModal = document.getElementById('animalModal');
+        const animalImage = document.getElementById('animalImage');
+        const modalLetter = document.getElementById('modalLetter');
+        const modalWord = document.getElementById('modalWord');
+        const closeBtn = document.getElementById('closeBtn');
 
-    function playRealAudio(text) {
-        const type = isUK ? 1 : 2;
-        const audio = new Audio(`https://dict.youdao.com/dictvoice?audio=${encodeURIComponent(text)}&type=${type}`);
-        audio.play();
-    }
+        // 防双击全局缩放
+        document.documentElement.addEventListener('touchend', function (event) {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, { passive: false });
+        // 禁用双指缩放
+        document.documentElement.addEventListener('touchstart', function (event) {
+            if (event.touches.length > 1) {
+                event.preventDefault();
+            }
+        }, { passive: false });
 
-    function randomLetter() {
-        const newIndex = Math.floor(Math.random() * letterData.length);
-        currentIndex = newIndex;
-        updateCard();
-    }
+        // 加载语音列表
+        function loadVoices() {
+            voices = window.speechSynthesis.getVoices();
+        }
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+        loadVoices();
 
-    function updateCard() {
-        const item = letterData[currentIndex];
-        letterDisplay.textContent = item.letter;
-        animalWord.textContent = item.word;
-        cnName.textContent = item.cn;
-    }
+        function randomLetter() {
+            const newIndex = Math.floor(Math.random() * letterData.length);
+            currentIndex = newIndex;
+            updateCard();
+        }
 
-    // 点击字母发音 + 动画
-    letterDisplay.addEventListener('click', () => {
-        const item = letterData[currentIndex];
-        card.classList.add('animate');
-        playRealAudio(item.letter);
-        setTimeout(() => {
-            card.classList.remove('animate');
-        }, 350);
-    });
+        function updateCard() {
+            const item = letterData[currentIndex];
+            letterDisplay.textContent = item.letter;
+            animalWord.textContent = item.word;
+            cnName.textContent = item.cn;
+        }
 
-    // 点击单词发音
-    wordBox.addEventListener('click', () => {
-        const item = letterData[currentIndex];
-        playRealAudio(item.word);
-    });
+        // 纯朗读函数：只朗读传入文本，优先干净 en-GB 英式语音
+        function speak(text) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-GB';
+            utterance.rate = 0.7;
+            utterance.pitch = 1;
+            const cleanUkVoice = voices.find(v => v.lang === 'en-GB' && !v.name.toLowerCase().includes('kapetou'));
+            if (cleanUkVoice) {
+                utterance.voice = cleanUkVoice;
+            }
+            window.speechSynthesis.speak(utterance);
+        }
 
-    nextBtn.addEventListener('click', randomLetter);
-    randomLetter();
-</script>
+        function showAnimalCard() {
+            const item = letterData[currentIndex];
+            modalLetter.textContent = item.letter;
+            modalWord.textContent = `${item.word} ${item.cn}`;
+            animalImage.textContent = item.emoji;
+            animalModal.classList.add('show');
+            speak(item.word);
+        }
 
+        function closeAnimalCard() {
+            animalModal.classList.remove('show');
+        }
+
+        // 点击字母：仅读单个纯字母
+        letterDisplay.addEventListener('click', () => {
+            const item = letterData[currentIndex];
+            card.classList.add('animate');
+            speak(item.letter);
+            setTimeout(() => {
+                card.classList.remove('animate');
+            }, 350);
+        });
+
+        // 点击单词：弹出卡片+读单词
+        wordBox.addEventListener('click', showAnimalCard);
+        animalImage.addEventListener('click', () => {
+            const item = letterData[currentIndex];
+            speak(item.word);
+        });
+
+        closeBtn.addEventListener('click', closeAnimalCard);
+        animalModal.addEventListener('click', (e) => {
+            if (e.target === animalModal) closeAnimalCard();
+        });
+
+        nextBtn.addEventListener('click', randomLetter);
+        randomLetter();
+    </script>
 </body>
 </html>
