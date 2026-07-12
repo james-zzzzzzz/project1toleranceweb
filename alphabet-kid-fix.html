@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>幼儿26字母英语启蒙｜4按钮发音版</title>
+<title>幼儿26字母英语启蒙｜真实录音版</title>
 <style>
     * {
         margin: 0;
@@ -130,6 +130,7 @@
     .tip {
         font-size: 13px;
         color: #bbb;
+        text-align: center;
         margin-top: 18px;
         line-height: 1.6;
     }
@@ -148,7 +149,7 @@
 </head>
 <body>
 
-<h1>📖 字母动物启蒙英语｜4按钮发音版</h1>
+<h1>📖 字母动物启蒙英语｜真实录音版</h1>
 
 <div class="control-buttons">
     <button class="ctrl-btn" id="btnUK">英式发音</button>
@@ -208,7 +209,7 @@
     let isUK = true;
     let isMale = false;
     let currentIndex = 0;
-    let voices = [];
+    const basePath = "./audio/";
 
     const card = document.getElementById('card');
     const letterDisplay = document.getElementById('letterDisplay');
@@ -220,15 +221,6 @@
     const btnUS = document.getElementById('btnUS');
     const btnFemale = document.getElementById('btnFemale');
     const btnMale = document.getElementById('btnMale');
-
-    // 加载并筛选正规英文语音，剔除异常语音
-    function loadVoices() {
-        voices = window.speechSynthesis.getVoices().filter(v => {
-            return (v.lang.startsWith('en-GB') || v.lang.startsWith('en-US')) && !v.name.toLowerCase().includes('kapetou') && !v.name.toLowerCase().includes('异常');
-        });
-    }
-    window.speechSynthesis.onvoiceschanged = loadVoices;
-    loadVoices();
 
     function updateBtnStyle() {
         btnUK.classList.toggle('active', isUK);
@@ -243,27 +235,15 @@
     btnFemale.onclick = () => { isMale = false; updateBtnStyle(); };
     btnMale.onclick = () => { isMale = true; updateBtnStyle(); };
 
-    function speak(text) {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = isUK ? 'en-GB' : 'en-US';
-        utterance.rate = 0.7;
-        utterance.pitch = isMale ? 0.9 : 1;
+    function getFolder() {
+        const acc = isUK ? 'uk' : 'us';
+        const gender = isMale ? 'male' : 'female';
+        return `${acc}_${gender}/`;
+    }
 
-        // 匹配对应口音语音
-        const targetVoices = voices.filter(v => v.lang.startsWith(isUK ? 'en-GB' : 'en-US'));
-        if (targetVoices.length > 0) {
-            if (isMale) {
-                // 优先男声英文语音
-                const maleVoice = targetVoices.find(v => v.gender === 'male' || v.name.toLowerCase().includes('male')) || targetVoices[0];
-                utterance.voice = maleVoice;
-            } else {
-                // 优先女声英文语音
-                const femaleVoice = targetVoices.find(v => v.gender === 'female' || v.name.toLowerCase().includes('female')) || targetVoices[0];
-                utterance.voice = femaleVoice;
-            }
-        }
-        window.speechSynthesis.speak(utterance);
+    function playAudio(filename) {
+        const audio = new Audio(basePath + getFolder() + filename + ".mp3");
+        audio.play();
     }
 
     function randomLetter() {
@@ -283,16 +263,16 @@
     letterDisplay.addEventListener('click', () => {
         const item = letterData[currentIndex];
         card.classList.add('animate');
-        speak(item.letter);
+        playAudio(item.letter);
         setTimeout(() => {
             card.classList.remove('animate');
         }, 350);
     });
 
-    // 点击单词发音（无图片弹窗）
+    // 点击单词发音
     wordBox.addEventListener('click', () => {
         const item = letterData[currentIndex];
-        speak(item.word);
+        playAudio(item.word);
     });
 
     nextBtn.addEventListener('click', randomLetter);
